@@ -1,0 +1,388 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        DogTop!
+    </title>
+    <style>
+        @media only screen and (max-width: 768px) {
+
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            body {
+                background-color: #c1c1c1;
+            }
+
+            .TopBar {
+                width: 100%;
+                height: 80px;
+                background-color: #8a2be2;
+                box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            }
+
+            .TopBar p {
+                width: 100%;
+                height: 100%;
+                color: white;
+                font-family: Arial, Helvetica, sans-serif;
+                font-weight: bolder;
+                font-size: 45px;
+                text-align: center;
+                line-height: 80px;
+            }
+
+            .WatchPanel {
+                width: 100%;
+                height: 800px;
+                background-color: white;
+                margin: 10 px auto;
+                box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+                display: flex;
+                justify-content: center;
+                flex-direction: column;
+            }
+
+            .LeftControl {
+                width: 100%;
+                height: 100vh;
+                border-right: solid 1px #BDBDBD;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .LeftControl h1,
+            .RightControl h1 {
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 32px;
+                font-weight: lighter;
+                color: #212121;
+                text-align: center;
+                border-bottom: solid 1px #BDBDBD;
+            }
+
+            .RightControl {
+                width: 100%;
+                height: 50vh;
+                display: flex;
+                flex-direction: column;
+                /* border: solid 1px black; */
+            }
+
+            .LeftControl h1,
+            .RightControl h1 {
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 25px;
+                font-weight: lighter;
+                color: #212121;
+                text-align: center;
+                border-bottom: solid 1px #BDBDBD;
+            }
+            #cpu_chart {
+                height: 50vh;
+            }
+
+            #mem_chart {
+                height: 50vh;
+            }
+
+            #disk_chart {
+                height: 50vh;
+            }
+        }
+
+        @media only screen and (min-width: 768px) {
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            body {
+                background-color: #c1c1c1;
+            }
+
+            .TopBar {
+                width: 100%;
+                height: 80px;
+                background-color: #8a2be2;
+                box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            }
+
+            .TopBar p {
+                width: 100%;
+                height: 100%;
+                color: white;
+                font-family: Arial, Helvetica, sans-serif;
+                font-weight: bolder;
+                font-size: 45px;
+                text-align: center;
+                line-height: 80px;
+            }
+
+            .WatchPanel {
+                width: 90%;
+                height: 800px;
+                background-color: white;
+                margin: 25px auto;
+                box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+                display: flex;
+                justify-content: center;
+                flex-direction: row;
+            }
+
+            .LeftControl {
+                width: 50%;
+                height: 800px;
+                border-right: solid 1px #BDBDBD;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .LeftControl h1,
+            .RightControl h1 {
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 32px;
+                font-weight: lighter;
+                color: #212121;
+                text-align: center;
+                border-bottom: solid 1px #BDBDBD;
+            }
+
+            .RightControl {
+                width: 50%;
+                height: 800px;
+                display: flex;
+                flex-direction: column;
+                /* border: solid 1px black; */
+            }
+
+            .LeftControl h1,
+            .RightControl h1 {
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 25px;
+                font-weight: lighter;
+                color: #212121;
+                text-align: center;
+                border-bottom: solid 1px #BDBDBD;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="TopBar">
+        <p>Dog Top!</p>
+    </div>
+
+    <div class="WatchPanel">
+        <div class="LeftControl">
+            <h1>
+                CPU
+            </h1>
+            <div id="cpu_chart" style="width: 100%;height:50%;"></div>
+            <h1>
+                Memory
+            </h1>
+            <div id="mem_chart" style="width: 100%;height:50%;"></div>
+        </div>
+        <div class="RightControl">
+            <h1>
+                Disk
+            </h1>
+            <div id="disk_chart" style="width: 100%;height:100%;"></div>
+        </div>
+    </div>
+    <script src="/static/echart.js"></script>
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+
+        function get_cpu_data() {
+            fetch('/get_cpu')
+                .then(
+                    reponse => reponse.json()
+                ).then(
+                    data => {
+                        create_cpu_chart(data)
+                    }
+                )
+        }
+        function generateLineChart() {
+            const chartContainer = echarts.init(document.getElementById('mem_chart'));
+            const timeData = [];
+            const memoryData = [];
+
+            let maxMemory = 0; // 最大内存使用量
+
+            // 获取最大内存使用量
+            fetch('/get_max_mem')
+                .then(response => response.json())
+                .then(data => {
+                    maxMemory = data.max_memory;
+
+                    const chartOptions = {
+                        xAxis: {
+                            type: 'category',
+                            data: timeData,
+                        },
+                        yAxis: {
+                            type: 'value',
+                            max: maxMemory, // 设置y轴最大值为最大内存使用量
+                            axisLabel: {
+                                formatter: '{value} GB',
+                            },
+                        },
+                        series: [{
+                            data: memoryData,
+                            type: 'line',
+                            lineStyle: {
+                                color: '#8a2be2'
+                            },
+                            itemStyle: {
+                                color: '#8a2be2'
+                            },
+                            areaStyle: {
+                                color: '#8a2be2'
+                            }
+                        }],
+                    };
+
+                    chartContainer.setOption(chartOptions);
+                });
+
+            // 定时更新数据
+            setInterval(() => {
+                fetch('/get_mem')
+                    .then(response => response.json())
+                    .then(data => {
+                        const currentTime = new Date().toLocaleTimeString();
+                        const memoryUsageGB = (data.memory_usage / 100 * maxMemory).toFixed(2);
+                        timeData.push(currentTime);
+                        memoryData.push(memoryUsageGB);
+
+                        if (timeData.length > 20) {
+                            timeData.shift();
+                            memoryData.shift();
+                        }
+
+                        // 更新折线图数据
+                        chartContainer.setOption({
+                            xAxis: {
+                                data: timeData,
+                            },
+                            series: [{
+                                data: memoryData,
+                            }],
+                        });
+                    });
+            }, 3000);
+        }
+
+        function create_cpu_chart(cpuData) {
+            var chart = echarts.init(document.getElementById('cpu_chart'));
+
+            var option = {
+                xAxis: {
+                    type: 'category',
+                    name: '近10次',
+                    data: Array.from({ length: cpuData.length }, (v, i) => i + 1)
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '使用率%',
+                    max: 100
+                },
+                series: [{
+                    type: 'line',
+                    data: cpuData,
+                    lineStyle: {
+                        color: '#8a2be2'
+                    },
+                    itemStyle: {
+                        color: '#8a2be2'
+                    },
+                    areaStyle: {
+                        color: '#8a2be2'
+                    }
+                }]
+            };
+
+            chart.setOption(option);
+
+        }
+
+        function generatePieChart() {
+            const chartContainer = echarts.init(document.getElementById('disk_chart'));
+
+            let diskTotal = 0; // 硬盘总容量
+
+            // 获取硬盘总容量
+            fetch('/get_disk_total')
+                .then(response => response.json())
+                .then(data => {
+                    diskTotal = data.disk_total;
+
+                    const chartOptions = {
+                        tooltip: {
+                            trigger: 'item',
+                            formatter: '{b}: {c} GB ({d}%)',
+                        },
+                        legend: {
+                            orient: 'vertical',
+                            right: 10,
+                            top: 20,
+                            data: ['Used', 'Free'],
+                        },
+                        series: [
+                            {
+                                type: 'pie',
+                                radius: '55%',
+                                center: ['40%', '50%'],
+                                label: {
+                                    formatter: '{b}: {c} GB ({d}%)',
+                                },
+                                data: [
+                                    { value: 0, name: 'Used', itemStyle: { color: '#8a2be2' } },
+                                    { value: 0, name: 'Free', itemStyle: { color: '#03b3b3' } },
+                                ],
+                            },
+                        ],
+                    };
+
+                    chartContainer.setOption(chartOptions);
+
+                    // 定时更新数据
+                    setInterval(() => {
+                        fetch('/get_disk')
+                            .then(response => response.json())
+                            .then(data => {
+                                const diskUsageGB = ((data.disk_usage / 100 * diskTotal)).toFixed(2);
+                                const diskFreeGB = (diskTotal - diskUsageGB).toFixed(2);
+
+                                // 更新饼图数据
+                                chartContainer.setOption({
+                                    series: [
+                                        {
+                                            data: [
+                                                { value: diskUsageGB, name: 'Used', itemStyle: { color: '#8a2be2' } },
+                                                { value: diskFreeGB, name: 'Free', itemStyle: { color: '#03b3b3' } },
+                                            ],
+                                        },
+                                    ],
+                                });
+                            });
+                    }, 10000);
+                });
+        }
+
+        setInterval(get_cpu_data, 1000);
+        get_cpu_data();
+        generateLineChart();
+        generatePieChart()
+    </script>
+</body>
+
+</html>
