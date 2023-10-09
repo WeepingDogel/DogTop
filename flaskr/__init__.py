@@ -25,7 +25,7 @@ def create_app():
     @app.route('/get_max_mem')
     def get_max_mem():
         max_memory = psutil.virtual_memory().total / 1024 / 1024 / 1024  # Calculates the maximum memory usage in GB
-        return jsonify({'max_memory': max_memory})  # Returns the maximum memory usage as a JSON response
+        return jsonify({'max_memory': round(max_memory)})  # Returns the maximum memory usage as a JSON response
 
     @app.route('/get_disk')
     def get_disk_rate():
